@@ -1,0 +1,165 @@
+================================================================================
+BINARY SEARCH — PATTERNS & TRICKS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. binary_search_704.py — Binary Search (LeetCode 704)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Classic Binary Search
+
+TRICK:
+  The foundation. Maintain left and right pointers. At each step, compute
+  mid = (left + right) // 2 and compare nums[mid] to target:
+    - Equal     → return mid
+    - Too small → left  = mid + 1  (search right half)
+    - Too big   → right = mid - 1  (search left half)
+  Loop condition is left <= right (inclusive on both ends).
+
+--------------------------------------------------------------------------------
+2. binary_search_insert_35.py — Search Insert Position (LeetCode 35)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search for Insertion Point (Lower Bound)
+
+TRICK:
+  Identical logic to classic binary search, but instead of returning -1 when
+  not found, return `left`. After the loop collapses, `left` naturally points
+  to the index where the target *would* be inserted to keep the array sorted.
+  You get the answer for free — no extra logic needed.
+
+--------------------------------------------------------------------------------
+3. guess_number_higher_lower.py — Guess Number (LeetCode 374)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search with External API / Black-Box Comparator
+
+TRICK:
+  Instead of comparing against an array element, you call an external
+  guess(mid) function that returns -1, 0, or 1. The binary search logic is
+  identical — just swap the direct comparison for the API call. The key insight
+  is recognising that any monotonic yes/no/direction signal can drive binary
+  search, not just array comparisons.
+
+--------------------------------------------------------------------------------
+4. sqrtx.py — Sqrt(x) (LeetCode 69)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search on the Answer Space
+
+TRICK:
+  You're not searching an array — you're searching a range of candidate
+  answers (0 to x). Binary search on mid*mid vs x:
+    - mid*mid == x  → exact answer
+    - mid*mid < x   → valid floor candidate; save it, search right for better
+    - mid*mid > x   → too big; search left
+  The saved `result` variable holds the last valid floor value when the loop
+  ends. Pattern: "search for the largest value that satisfies a condition."
+
+--------------------------------------------------------------------------------
+5. is_bad.py — First Bad Version (LeetCode 278)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search for the First True (Leftmost Condition)
+
+TRICK:
+  When isBadVersion(mid) is True, don't stop — record mid as a candidate
+  and keep searching LEFT (right = mid - 1) to find an earlier bad version.
+  When it's False, search right (left = mid + 1).
+  The result variable captures the leftmost True. This is the "find first
+  occurrence" pattern — always keep going left when you find a match.
+
+--------------------------------------------------------------------------------
+6. search_range_medium.py — Find First and Last Position (LeetCode 34)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Two-Pass Binary Search (Leftmost + Rightmost)
+
+TRICK:
+  Run binary search TWICE with different biases:
+    findLeft:  when nums[mid] == target → save mid, then right = mid - 1
+               (keep going LEFT to find the first occurrence)
+    findRight: when nums[mid] == target → save mid, then left = mid + 1
+               (keep going RIGHT to find the last occurrence)
+  Both passes are O(log n), so the combined result is still O(log n).
+  The key: don't return immediately on a match — bias the search direction.
+
+--------------------------------------------------------------------------------
+7. search_in_rotated_sorted_array.py — Search in Rotated Array (LeetCode 33)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search on Rotated Sorted Array (No Duplicates)
+
+NOTE: This file is incomplete (code cuts off mid-function). See file
+      search_in_rotated_sorted_array_medium_1.py for the complete solution.
+
+TRICK (see #8 below for full explanation):
+  At every step, one of the two halves is ALWAYS fully sorted.
+  Identify the sorted half, check if the target falls within it, and discard
+  the other half.
+
+--------------------------------------------------------------------------------
+8. search_in_rotated_sorted_array_medium_1.py — Search in Rotated Array (LeetCode 33)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search on Rotated Sorted Array (No Duplicates) — Complete
+
+TRICK:
+  A rotated array always has one sorted half at any mid. Use this:
+
+  Step 1 — Identify which half is sorted:
+    if nums[low] <= nums[mid]  →  LEFT half is sorted
+    else                       →  RIGHT half is sorted
+
+  Step 2 — Check if target is in the sorted half:
+    LEFT sorted:  if nums[low] <= target <= nums[mid]  → go left (high = mid-1)
+                  else                                 → go right (low = mid+1)
+    RIGHT sorted: if nums[mid] <= target <= nums[high] → go right (low = mid+1)
+                  else                                 → go left (high = mid-1)
+
+  The invariant: one half is always cleanly sorted, giving you a safe range
+  to test the target against.
+
+--------------------------------------------------------------------------------
+9. find_mimimum_rotated_sorted_array_medium.py — Find Min in Rotated Array (LeetCode 153)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search on Rotated Array to Find the Pivot (Minimum)
+
+TRICK:
+  Compare nums[mid] to nums[right] (NOT nums[left]):
+    - nums[mid] > nums[right] → mid is in the left (higher) segment,
+                                minimum is to the RIGHT → left = mid + 1
+    - nums[mid] < nums[right] → mid is in the right (lower) segment,
+                                minimum could be at mid or left → right = mid
+
+  Loop ends when left == right, which points to the minimum.
+  Key insight: comparing to nums[right] tells you which side of the
+  rotation point you're on. The minimum is always at the rotation point.
+
+--------------------------------------------------------------------------------
+10. search_in_a_rotated_array_medium_2.py — Search in Rotated Array II (LeetCode 81)
+--------------------------------------------------------------------------------
+SUB-PATTERN: Binary Search on Rotated Sorted Array WITH Duplicates
+
+TRICK:
+  Same logic as #8 (identify sorted half, check if target is in it), BUT
+  duplicates can make it impossible to determine which half is sorted.
+
+  The extra case to handle:
+    if nums[low] == nums[mid] == nums[high]:
+        low  += 1
+        high -= 1
+        continue   ← shrink both ends and retry
+
+  Why? When all three are equal, you can't tell which half is sorted.
+  Shrinking both ends is safe because those duplicate elements are
+  not the target (we already checked nums[mid] == target at the top).
+  Worst case becomes O(n), but average case stays O(log n).
+
+================================================================================
+SUMMARY — SUB-PATTERN CHEATSHEET
+================================================================================
+
+  Classic Binary Search          → 704
+  Insertion Point (Lower Bound)  → 35
+  Black-Box / API Comparator     → 374
+  Search on Answer Space         → 69
+  Find First True (Leftmost)     → 278
+  Two-Pass (First + Last)        → 34
+  Rotated Array — Find Target    → 33 (med_1), 33 (incomplete)
+  Rotated Array — Find Minimum   → 153
+  Rotated Array + Duplicates     → 81
+
+================================================================================
